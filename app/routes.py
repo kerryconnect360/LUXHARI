@@ -67,7 +67,9 @@ def product(product_id):
 
 @public_bp.route('/media/<path:filename>')
 def media(filename):
-    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+    response = send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+    response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+    return response
 
 
 @public_bp.route('/manifest.json')

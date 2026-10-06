@@ -13,7 +13,7 @@ def create_app():
     os.makedirs(app.instance_path, exist_ok=True)
     os.makedirs(os.path.join(app.root_path, '..', 'uploads'), exist_ok=True)
 
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-change-me')
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or os.urandom(32)
     database_url = os.getenv('DATABASE_URL')
     if database_url and database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)

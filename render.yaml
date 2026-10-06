@@ -5,11 +5,7 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn run:app
     envVars:
-      - key: SECRET_KEY
-        generateValue: true
       - key: USER_NAME
         sync: false
       - key: USER_PASSWORD
-        sync: false
-      - key: DATABASE_URL
         sync: false
