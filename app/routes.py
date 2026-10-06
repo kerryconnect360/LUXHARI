@@ -1,5 +1,6 @@
 import os
 import uuid
+import hmac
 from functools import wraps
 from decimal import Decimal
 from flask import Blueprint, current_app, render_template, request, redirect, url_for, session, flash, send_from_directory, abort, jsonify
@@ -52,8 +53,9 @@ def home():
     enabled = [x.strip() for x in get_setting('categories_enabled', '').split(',') if x.strip()]
     if selected and selected in CATEGORIES and selected in enabled:
         query = query.filter_by(category=selected)
-    products = query.order_by(Product.featured.desc(), Product.created_at.desc()).all()
-    return render_template('home.html', products=products, categories=CATEGORIES, selected=selected)
+    page = max(1, request.args.get('page', 1, type=int) or 1)
+    pagination = query.order_by(Product.featured.desc(), Product.created_at.desc()).paginate(page=page, per_page=48, error_out=False)
+    return render_template('home.html', products=pagination.items, pagination=pagination, categories=CATEGORIES, selected=selected)
 
 
 @public_bp.route('/product/<int:product_id>')
@@ -104,6 +106,8 @@ def pwa_icon():
 def service_worker():
     response = current_app.make_response(render_template('service-worker.js'))
     response.headers['Content-Type'] = 'application/javascript'
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
     return response
 
 
@@ -227,16 +231,53 @@ def about():
     return render_template('about.html')
 
 
+@admin_bp.after_request
+def admin_no_cache(response):
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    return response
+
+
 @admin_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    configured_username = os.environ.get('USER_NAME', 'admin')
+    configured_password = os.environ.get('USER_PASSWORD', 'change-this-password')
+
+    def clean_env_value(value):
+        value = (value or '').strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {'\"', "'"}:
+            value = value[1:-1].strip()
+        return value
+
+    configured_username = clean_env_value(configured_username)
+    configured_password = clean_env_value(configured_password)
     if request.method == 'POST':
-        username = request.form.get('username', '')
-        password = request.form.get('password', '')
-        if username == os.getenv('USER_NAME', 'admin') and password == os.getenv('USER_PASSWORD', 'change-this-password'):
+        username = clean_env_value(request.form.get('username', ''))
+        password = clean_env_value(request.form.get('password', ''))
+        username_ok = hmac.compare_digest(username, configured_username)
+        password_ok = hmac.compare_digest(password, configured_password)
+        # USER_NAME/USER_PASSWORD are authoritative. The aliases are only a compatibility
+        # safety net for old Render services that may still carry USERNAME/PASSWORD.
+        if not (username_ok and password_ok):
+            legacy_username = os.environ.get('USERNAME')
+            legacy_password = os.environ.get('PASSWORD')
+            if legacy_username and legacy_password:
+                username_ok = hmac.compare_digest(username, clean_env_value(legacy_username))
+                password_ok = hmac.compare_digest(password, clean_env_value(legacy_password))
+        if username_ok and password_ok:
+            session.clear()
+            session.permanent = True
             session['admin_logged_in'] = True
+            session['admin_user'] = configured_username
             return redirect(request.args.get('next') or url_for('admin.dashboard'))
-        flash('Invalid admin credentials.', 'error')
+        flash('The admin login did not match USER_NAME / USER_PASSWORD. Check the Render values exactly, then try again.', 'error')
     return render_template('admin/login.html')
+
+
+@public_bp.route('/pulse_receiver', methods=['POST', 'GET'])
+def pulse_receiver():
+    # Compatibility endpoint for harmless external uptime/pulse checks.
+    return ('', 204)
 
 
 @admin_bp.get('/logout')

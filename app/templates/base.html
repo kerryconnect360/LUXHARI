@@ -43,7 +43,7 @@
   {% if messages %}<div class="toast-stack">{% for category, message in messages %}<div class="toast {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}
 {% endwith %}
 <main>{% block content %}{% endblock %}</main>
-<footer class="site-footer"><div><div class="footer-brand">LUXHARI</div><p>{{ site.get('tagline','Wear what inspires you.') }}</p></div><div class="footer-links"><a href="{{ url_for('public.about') }}">About</a><a href="{{ url_for('public.track') }}">Track order</a><a href="{{ url_for('admin.login') }}">Authority</a></div></footer>
+<footer class="site-footer"><div><div class="footer-brand">LUXHARI</div><p>{{ site.get('tagline','Wear what inspires you.') }}</p><small class="footer-credit">Starter photography from Pexels · Replace with your own imagery through Authority.</small></div><div class="footer-links"><a href="{{ url_for('public.about') }}">About</a><a href="{{ url_for('public.track') }}">Track order</a><a href="{{ url_for('admin.login') }}">Authority</a></div></footer>
 <nav class="mobile-bar"><a href="{{ url_for('public.home') }}">Discover</a><a href="{{ url_for('public.home') }}#categories">Categories</a><a href="{{ url_for('public.interests') }}">♥ <span>Interests</span></a><a href="{{ url_for('public.cart') }}">Bag</a><button id="mobileMenu">Menu</button></nav>
 </div>
 <script src="{{ url_for('static', filename='js/luxhari.js') }}"></script>

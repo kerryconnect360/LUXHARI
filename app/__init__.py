@@ -1,4 +1,6 @@
 import os
+import hashlib
+from datetime import timedelta
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
@@ -13,7 +15,15 @@ def create_app():
     os.makedirs(app.instance_path, exist_ok=True)
     os.makedirs(os.path.join(app.root_path, '..', 'uploads'), exist_ok=True)
 
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY') or os.urandom(32)
+    # No extra SECRET_KEY environment variable is required. A stable key is derived
+    # from the existing admin environment values so login sessions survive Render restarts.
+    username = os.getenv('USER_NAME', 'admin')
+    password = os.getenv('USER_PASSWORD', 'change-this-password')
+    app.config['SECRET_KEY'] = hashlib.sha256(f'{username}::{password}::LUXHARI'.encode()).hexdigest()
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = os.getenv('RENDER', '').lower() == 'true'
     database_url = os.getenv('DATABASE_URL')
     if database_url and database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
@@ -46,14 +56,9 @@ def create_app():
         for key, value in defaults.items():
             if not Setting.query.filter_by(key=key).first():
                 db.session.add(Setting(key=key, value=value))
-        from .models import Product
-        if Product.query.count() == 0:
-            db.session.add_all([
-                Product(name='LUXHARI Editorial Dress', category='Clothing', product_type='Clothing', description='A demonstration catalogue piece. Replace with the real LUXHARI collection image and details from Authority.', price=8500, stock=3, sizes='S / M / L / XL', featured=True),
-                Product(name='Signature Jacquard', category='Materials', product_type='Material', description='A demonstration material listing. Enter the actual material, colour, texture and stock.', price=1800, unit_label='metre', stock=24),
-                Product(name='Velvet Living Set', category='Home & Living', product_type='Home textile', description='A demonstration finished textile product.', price=12500, stock=2),
-            ])
-            db.session.commit()
+        from .seed_catalog import ensure_starter_catalog
+        ensure_starter_catalog()
+        db.session.commit()
 
     @app.context_processor
     def inject_site():
