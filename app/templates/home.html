@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero container">
+  <p class="eyebrow">LUXHARI / DISCOVER</p>
+  <h1>Wear what<br><em>inspires you.</em></h1>
+  <p class="hero-copy">A visual edit of clothing, materials, finished spaces and pieces worth keeping close.</p>
+  <div class="hero-actions"><a class="button primary" href="#wall">Explore the edit</a><a class="button ghost" href="{{ url_for('public.interests') }}">View interests</a></div>
+</section>
+<section class="category-strip container" id="categories">
+  <a class="category-pill {% if not selected %}active{% endif %}" href="{{ url_for('public.home') }}">All</a>
+  {% for cat in categories if cat in enabled_categories %}<a class="category-pill {% if selected==cat %}active{% endif %}" href="{{ url_for('public.home', category=cat) }}">{{ cat }}</a>{% endfor %}
+</section>
+<section class="container" id="wall"><div class="section-head"><div><p class="eyebrow">THE EDIT</p><h2>Discover slowly.</h2></div><p class="section-note">Visual first. Practical when you need it.</p></div>
+<div class="masonry">
+  {% for p in products %}
+  <article class="tile {% if loop.index % 5 == 0 %}tall{% elif loop.index % 3 == 0 %}wide{% endif %}">
+    <a href="{{ url_for('public.product', product_id=p.id) }}" class="tile-media">
+      {% if p.image %}{% if p.image.startswith('http') %}<img src="{{ p.image }}" loading="lazy" alt="{{ p.name }}">{% else %}<img src="{{ url_for('public.media', filename=p.image) }}" loading="lazy" alt="{{ p.name }}">{% endif %}{% else %}<div class="image-placeholder"><span>{{ p.category }}</span><b>{{ p.name[0] }}</b></div>{% endif %}
+      <span class="tile-tag">{{ p.category }}</span>
+    </a>
+    <div class="tile-meta"><div><a href="{{ url_for('public.product', product_id=p.id) }}"><h3>{{ p.name }}</h3></a><p>{{ 'KSh {:,.2f}'.format(p.price) }}{% if p.unit_label and p.unit_label != 'item' %} / {{ p.unit_label }}{% endif %}</p></div><button class="love" data-love="{{ p.id }}" aria-label="Love {{ p.name }}">♡ <span>{{ p.loves }}</span></button></div>
+  </article>
+  {% else %}<div class="empty-state"><h3>The edit is waiting for its first story.</h3><p>Log into Authority to add LUXHARI's first pieces.</p></div>{% endfor %}
+</div></section>
+<section class="editorial-band"><div class="container editorial-grid"><div><p class="eyebrow">LUXHARI JOURNAL</p><h2>Texture, shape,<br><em>possibility.</em></h2></div><p>Use Inspiration and On Model to turn products into a visual language — then let customers move from an image they love to the exact piece behind it.</p></div></section>
+{% endblock %}

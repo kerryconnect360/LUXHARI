@@ -1,0 +1,2 @@
+{% extends 'base.html' %}
+{% block content %}<section class="container narrow-page"><p class="eyebrow">MY INTERESTS</p><h1>Your saved LUXHARI pieces.</h1><p class="section-note">Hearts are kept on this device so you can build a personal edit without an account.</p><div id="interestGrid" class="mini-grid interest-grid"></div><div id="interestEmpty" class="empty-state"><h2>Nothing saved yet.</h2><p>Tap ♡ while discovering to keep a piece close.</p><a class="button primary" href="{{ url_for('public.home') }}">Discover pieces</a></div></section>{% endblock %}
