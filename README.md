@@ -1,42 +1,30 @@
-# LUXHARI — from-scratch Flask storefront
+# LUXHARI
 
-A mobile-first visual shopping storefront with an Authority admin area.
+Luxury visual-shopping Flask application, ready for Render.
 
-## Render — simplest setup
-
-Environment variables:
+## Render environment variables
+Only these are required for the built-in admin login:
 
 - `USER_NAME`
 - `USER_PASSWORD`
 
-Nothing else is required for a first deployment. The Flask session key is derived from these two values, so you do not need to add a separate `SECRET_KEY` variable.
+Do not put GitHub `ghp_...` tokens into the application. Keep GitHub credentials in GitHub/Render's repository connection.
 
-Start command:
-
-`gunicorn run:app`
-
-Build command:
-
+## Render commands
+Build:
 `pip install -r requirements.txt`
 
+Start:
+`gunicorn run:app`
+
+## Admin
+Open `/admin/` and sign in with the exact `USER_NAME` and `USER_PASSWORD` values configured in Render. Leading/trailing spaces and accidentally wrapped quote characters are safely trimmed.
+
 ## Starter catalogue
+A new database is automatically seeded to at least 50 listings in each of the 7 public categories (350+ launch records total). Starter photography uses real Pexels-hosted photography and is intended to be replaced/edited from Authority before final commercial launch.
 
-On an empty or nearly empty database, LUXHARI automatically ensures at least **50 records in each of the 7 public categories**. That means a launch-ready catalogue of at least 350 records. The starter entries use real Pexels photography as replaceable launch imagery; names, prices and stock are placeholders until the owner edits them in Authority.
+## Editing products
+Authority lets the owner create, edit, replace images, feature, and archive catalogue items.
 
-The storefront paginates the catalogue at 48 items per page to keep first-load performance sensible.
-
-Starter photography is used under the Pexels license. The imagery is presentation material, not a claim that pictured people or brands endorse LUXHARI. Replace starter images with LUXHARI-owned photography before treating the catalogue as final brand inventory.
-
-## Authority
-
-Open `/admin/` and sign in with `USER_NAME` and `USER_PASSWORD` from Render. The login accepts the exact values and is also tolerant of accidental surrounding whitespace. A compatibility fallback accepts legacy `USERNAME` / `PASSWORD` values if they exist, but `USER_NAME` / `USER_PASSWORD` are the intended variables.
-
-Authority lets you create/edit/archive products, upload replacement images, upload the LUXHARI logo, configure contact details, configure "Where to Pay", and manage order/payment states.
-
-## Payments / receipts
-
-Checkout shows the owner-provided payment instructions and payment image. Customers can submit a payment reference and are then taken to a polished LUXHARI receipt page. Admins can move payment state through Pending → Payment initiated → Paid, and order state through the fulfilment lifecycle.
-
-## PWA / caching
-
-The service worker caches the application shell and previously viewed catalogue images. The application is designed to remain useful during temporary network drops, while the database remains the source of truth.
+## Caching
+The PWA caches public/static catalogue resources for faster repeat visits. Admin, checkout, order tracking, and other private/live routes are deliberately not cached.

@@ -23,7 +23,9 @@ def create_app():
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['SESSION_COOKIE_SECURE'] = os.getenv('RENDER', '').lower() == 'true'
+    # Render serves the live site over HTTPS; secure cookies keep the admin session reliable.
+    # For local HTTP development, set LUXHARI_LOCAL_HTTP=1 to disable the secure flag.
+    app.config['SESSION_COOKIE_SECURE'] = os.getenv('LUXHARI_LOCAL_HTTP', '').strip() != '1'
     database_url = os.getenv('DATABASE_URL')
     if database_url and database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
